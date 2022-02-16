@@ -26,8 +26,9 @@ class full_shape_spectra(): #Likelihood_prior):
 
                 # Define nuisance parameter mean and standard deviations
                 shape = np.ones(self.dataset.nz)
-                self.prior_b2 = 0.*shape, 1.*shape
-                self.prior_bG2 = 0.*shape, 1.*shape
+                #Bias priors applied elsewhere
+                #self.prior_b2 = 0.*shape, 1.*shape
+                #self.prior_bG2 = 0.*shape, 1.*shape
                 self.prior_bGamma3 = lambda b1: (23.*(b1-1.)/42., 1.*shape) 
                 self.prior_cs0 = 0.*shape, 30.*shape
                 self.prior_cs2 = 30.*shape, 30.*shape
@@ -74,28 +75,29 @@ class full_shape_spectra(): #Likelihood_prior):
                 print("#################################################\n")
                 
                 
-        def loglkl(self, cosmo, data):
+        def loglkl(self, cosmo, nuisance_params):
                 """Compute the log-likelihood for a given set of cosmological and nuisance parameters. Note that this marginalizes over nuisance parameters that enter the model linearly."""
 
                 # Load cosmological parameters
                 h = cosmo.h()
                 As = cosmo.A_s()
                 norm = 1. # (A_s/A_s_fid)^{1/2}
-                fNL_eq = (data.mcmc_parameters['f^{eq}_{NL}']['current'] * data.mcmc_parameters['f^{eq}_{NL}']['scale'])
-                fNL_orth = (data.mcmc_parameters['f^{orth}_{NL}']['current'] * data.mcmc_parameters['f^{orth}_{NL}']['scale'])
-                alpha_rs = (data.mcmc_parameters['alpha_{r_s}']['current'] * data.mcmc_parameters['alpha_{r_s}']['scale'])
+                #fNL_eq = (data.mcmc_parameters['f^{eq}_{NL}']['current'] * data.mcmc_parameters['f^{eq}_{NL}']['scale'])
+                #fNL_orth = (data.mcmc_parameters['f^{orth}_{NL}']['current'] * data.mcmc_parameters['f^{orth}_{NL}']['scale'])
+                #alpha_rs = (data.mcmc_parameters['alpha_{r_s}']['current'] * data.mcmc_parameters['alpha_{r_s}']['scale'])
 
                 z = self.z[:self.nz]
                 fz = np.asarray([cosmo.scale_independent_growth_factor_f(zz) for zz in z])
                 
                 # Load non-linear nuisance parameters
-                b1 = np.asarray([(data.mcmc_parameters['b^{('+str(i_s)+')}_1']['current']*data.mcmc_parameters['b^{('+str(i_s)+')}_1']['scale']) for i_s in range(1,1+self.nz)])
-                b2 = np.asarray([(data.mcmc_parameters['b^{('+str(i_s)+')}_2']['current']*data.mcmc_parameters['b^{('+str(i_s)+')}_2']['scale']) for i_s in range(1,1+self.nz)])
-                bG2 = np.asarray([(data.mcmc_parameters['b^{('+str(i_s)+')}_{G_2}']['current']*data.mcmc_parameters['b^{('+str(i_s)+')}_{G_2}']['scale']) for i_s in range(1,1+self.nz)])
+                b1, b2, bG2, fNL_eq, fNL_orth, alpha_rs = nuisance_params
+                #b1 = np.asarray([(data.mcmc_parameters['b^{('+str(i_s)+')}_1']['current']*data.mcmc_parameters['b^{('+str(i_s)+')}_1']['scale']) for i_s in range(1,1+self.nz)])
+                #b2 = np.asarray([(data.mcmc_parameters['b^{('+str(i_s)+')}_2']['current']*data.mcmc_parameters['b^{('+str(i_s)+')}_2']['scale']) for i_s in range(1,1+self.nz)])
+                #bG2 = np.asarray([(data.mcmc_parameters['b^{('+str(i_s)+')}_{G_2}']['current']*data.mcmc_parameters['b^{('+str(i_s)+')}_{G_2}']['scale']) for i_s in range(1,1+self.nz)])
                 
                 ## Load parameter means and variances fromm self.prior_b2, ensuring each is a vector of length nz
-                mean_b2, std_b2 = self.prior_b2
-                mean_bG2, std_bG2 = self.prior_bG2
+                #mean_b2, std_b2 = self.prior_b2 #b2 prior applied elsewhere
+                #mean_bG2, std_bG2 = self.prior_bG2 #bG2 prior applied elsewhere
                 mean_bGamma3, std_bGamma3 = self.prior_bGamma3(b1)
                 mean_cs0, std_cs0 = self.prior_cs0
                 mean_cs2, std_cs2 = self.prior_cs2
@@ -232,8 +234,8 @@ class full_shape_spectra(): #Likelihood_prior):
                         # Correct covariance matrix normalization
                         chi2 += np.linalg.slogdet(marg_cov)[1] - dataset.logdetcov[zi]
                         
-                        # Add bias parameter priors
-                        chi2 += (b2[zi]-mean_b2[zi])**2./std_b2[zi]**2. + (bG2[zi]-mean_bG2[zi])**2./std_bG2[zi]**2.
+                        # Bias parameter priors applied elsewhere
+                        #chi2 += (b2[zi]-mean_b2[zi])**2./std_b2[zi]**2. + (bG2[zi]-mean_bG2[zi])**2./std_bG2[zi]**2.
 
                 # Return full loglikelihood
                 loglkl = -0.5*chi2
