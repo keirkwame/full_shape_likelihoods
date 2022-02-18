@@ -1,0 +1,39 @@
+{"z": [0.61, 0.61, 0.38, 0.38],
+"nz": 4,
+"inv_nbar": [5000.0, 5000.0, 3500.0, 3500.0],
+
+"use_P": true,
+"use_Q": true,
+"use_AP": true,
+"use_B": true,
+
+"data_directory": "/home/keir/Software/cosmosis/modules/full_shape_likelihoods/",
+"P_measurements": ["data/boss_pk_ngc_z3.dat", "data/boss_pk_sgc_z3.dat", "data/boss_pk_ngc_z1.dat",
+  "data/boss_pk_sgc_z1.dat"],
+"AP_measurements": ["data/boss_alpha_ngc_z3.dat", "data/boss_alpha_sgc_z3.dat", "data/boss_alpha_ngc_z1.dat",
+  "data/boss_alpha_sgc_z1.dat"],
+"B_measurements": ["data/boss_bk_ngc_z3.dat", "data/boss_bk_sgc_z3.dat", "data/boss_bk_ngc_z1.dat",
+  "data/boss_bk_sgc_z1.dat"],
+
+"covmat_file": ["data/boss_cov_ngc_z3.dat", "data/boss_cov_sgc_z3.dat", "data/boss_cov_ngc_z1.dat",
+  "data/boss_cov_sgc_z1.dat"],
+
+"h_fid": 0.676,
+"DA_fid": [1486.9604106889594, 1486.9604106889594, 1108.8090636654, 1108.8090636654],
+"Hz_fid": [91.39727080913846, 91.39727080913846, 82.9281, 82.9281],
+
+"rdHfid": [0.046932401774762225, 0.046932401774762225, 0.040872046001833195, 0.040872046001833195],
+"rdDAfid": [0.1031183538734282, 0.1031183538734282, 0.13325653008234437, 0.13325653008234437],
+
+"bin_integration_P": true,
+"kminP": 0.01,
+"kmaxP": 0.20,
+"kmaxQ": 0.40,
+"no_wiggle": false,
+
+"discreteness_weights_file": ["data/boss_bk_weights_ngc_z3.dat", "data/boss_bk_weights_sgc_z3.dat",
+  "data/boss_bk_weights_ngc_z1.dat", "data/boss_bk_weights_sgc_z1.dat"],
+"kminB": 0.015,
+"kmaxB": 0.075,
+"ksizeB": 7
+}
