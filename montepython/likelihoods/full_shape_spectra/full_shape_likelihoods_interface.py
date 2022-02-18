@@ -62,11 +62,13 @@ def execute(block, config):
         cosmology, nuisance_parameters)
     print('log_like =', log_like)
     block.put_grid('full_shape_likelihoods', 'k_multipoles', kP, 'z_multipoles',
-                   likelihood_object.z[likelihood_object.nz], 'monopole', P0_theory)
+                   likelihood_object.z[:likelihood_object.nz], 'monopole', P0_theory)
     block.put('full_shape_likelihoods', 'quadrupole', P2_theory)
     block.put('full_shape_likelihoods', 'hexadecapole', P4_theory)
-    block.put_grid('full_shape_likelihoods', 'k_Q', kQ, 'z_Q', likelihood_object.z[likelihood_object.nz], 'Q', Q_theory)
-    block.put_grid('full_shape_likelihoods', 'k_B', kB, 'z_B', likelihood_object.z[likelihood_object.nz], 'B', B_theory)
+    block.put_grid('full_shape_likelihoods', 'k_Q', kQ, 'z_Q', likelihood_object.z[:likelihood_object.nz], 'Q',
+                   Q_theory)
+    block.put_grid('full_shape_likelihoods', 'k_B', kB, 'z_B', likelihood_object.z[:likelihood_object.nz], 'B',
+                   B_theory)
     block.put('full_shape_likelihoods', 'Alcock_Paczynski', AP_theory)
     block[names.likelihoods, 'full_shape_likelihoods_like'] = log_like
 
