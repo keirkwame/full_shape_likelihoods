@@ -5,6 +5,7 @@ from scipy.special.orthogonal import p_roots
 #import os,sys
 #path=os.path.dirname(os.path.realpath(__file__))
 #sys.path.append(path)
+from classy import Class
 from fs_utils import Datasets, PkTheory, BkTheory
 
 class full_shape_spectra(): #Likelihood_prior):
@@ -46,7 +47,8 @@ class full_shape_spectra(): #Likelihood_prior):
                         n_gauss = 3
                         n_gauss2 = 8
                         [gauss_mu,self.gauss_w], [gauss_mu2,self.gauss_w2] = p_roots(n_gauss), p_roots(n_gauss2)
-                        self.mesh_mu = np.meshgrid(gauss_mu,gauss_mu,gauss_mu,gauss_mu2,gauss_mu2, sparse=True, indexing='ij')
+                        self.mesh_mu = np.meshgrid(gauss_mu,gauss_mu,gauss_mu,gauss_mu2,gauss_mu2, sparse=True,
+                                                   indexing='ij')
 
                 # Summarize input parameters
                 print("#################################################\n")
@@ -76,13 +78,15 @@ class full_shape_spectra(): #Likelihood_prior):
                 
                 
         def loglkl(self, cosmo, nuisance_params):
-                """Compute the log-likelihood for a given set of cosmological and nuisance parameters. Note that this marginalizes over nuisance parameters that enter the model linearly."""
+                """Compute the log-likelihood for a given set of cosmological and nuisance parameters. Note that this
+                marginalizes over nuisance parameters that enter the model linearly."""
 
                 # Load cosmological parameters
-                h, As = cosmo[0]
-                z_distance, h_z, d_a = cosmo[1]
+                h, As, ns = cosmo[0]
+                rs_drag, z_distance, h_z, d_a = cosmo[1]
                 k_growth, z_growth, f, delta_tot = cosmo[2]
                 k_power, z_power, pk = cosmo[3]
+                idx_growth_0 = np.where(z_growth == 0.)[0][0]
                 #h = cosmo.h()
                 #As = cosmo.A_s()
                 norm = 1. # (A_s/A_s_fid)^{1/2}
@@ -119,14 +123,14 @@ class full_shape_spectra(): #Likelihood_prior):
                 nP, nQ, nB, nAP = dataset.nP, dataset.nQ, dataset.nB, dataset.nAP
                 
                 # Compute useful quantities for AP parameters
-                if self.use_AP or self.use_B:
-                        DA_th = np.asarray([cosmo.angular_distance(zz) for zz in z])
-                        Hz_th = np.asarray([cosmo.Hubble(zz) for zz in z])
-                        rs_th = cosmo.rs_drag()
-                        
+                #if self.use_AP or self.use_B:
+                #        #DA_th = np.asarray([cosmo.angular_distance(zz) for zz in z])
+                #        #Hz_th = np.asarray([cosmo.Hubble(zz) for zz in z])
+                #        #rs_th = cosmo.rs_drag()
                 # Create output arrays (will be overwritten for each redshift)
                 theory_minus_data = np.zeros(3*nP+nB+nQ+nAP)
-                deriv_bGamma3, deriv_Pshot, deriv_Bshot, deriv_c1, deriv_a0, deriv_a2, deriv_cs0, deriv_cs2, deriv_cs4, deriv_b4, deriv_bphi, deriv_c1 = [np.zeros(3*nP+nB+nQ+nAP) for _ in range(12)]
+                deriv_bGamma3, deriv_Pshot, deriv_Bshot, deriv_c1, deriv_a0, deriv_a2, deriv_cs0, deriv_cs2, deriv_cs4, deriv_b4, deriv_bphi, deriv_c1 = [
+                        np.zeros(3*nP+nB+nQ+nAP) for _ in range(12)]
                 
                 if self.use_P or self.use_B:
                         if self.bin_integration_P:
@@ -140,28 +144,53 @@ class full_shape_spectra(): #Likelihood_prior):
 
                 # Iterate over redshift bins
                 for zi in range(self.nz):
-                        #Get scale-independent f(z)
-                        idx_distance = np.where(np.absolute(z_distance - z[zi]) < 1.e-4)[0][0]
-                        idx_growth = np.where(np.absolute(z_growth - z[zi]) < 1.e-4)[0][0]
+                        if (zi > 0) and (z[zi] != z[zi - 1]):
+                                #Get z indices
+                                idx_distance = np.where(np.absolute(z_distance - z[zi]) < 1.e-4)[0][0]
+                                idx_growth = np.where(np.absolute(z_growth - z[zi]) < 1.e-4)[0][0]
+                                idx_power = np.where(np.absolute(z_power - z) < 1.e-4)[0][0]
+
+                                #Get linear matter power spectrum
+                                pk_linear = 'pk_linear.dat'
+                                k_pk = np.concatenate((k_power.reshape(-1, 1) * h, pk[:, idx_power].reshape(-1, 1) / (h ** 3)),
+                                                      axis=1)
+                                np.savetxt(pk_linear, k_pk, delimiter='\t')
+
+                                #Get CLASS-PT object
+                                class_object = Class()
+                                class_object.set({'h': h, 'output': 'mPk', 'z_pk': z[zi], 'non linear': 'PT',
+                                                  'IR resummation': 'Yes', 'Bias tracers': 'Yes', 'FFTLog mode': 'FAST',
+                                                  'RSD': 'Yes', 'AP': 'Yes', 'Omfid': '0.31', 'Input Pk': pk_linear,
+                                                  'replace background': 'Yes', 'Hz_replace': h_z[idx_distance],
+                                                  'DAz_replace': d_a[idx_distance],
+                                                  'Dz_replace': delta_tot[0, idx_growth] / delta_tot[0, idx_growth_0],
+                                                  'fz_replace': f[0, idx_growth]})
+                                class_object.compute()
 
                         if self.use_P or self.use_B:
                                 # Run CLASS-PT
-                                all_theory = cosmo.get_pk_mult(k_grid*h, z[zi], len(k_grid), no_wiggle = self.no_wiggle, alpha_rs = alpha_rs)
+                                all_theory = class_object.get_pk_mult(k_grid*h, z[zi], len(k_grid),
+                                                                      no_wiggle = self.no_wiggle, alpha_rs = alpha_rs)
                                 # Load fNL utilities
                                 Pk_lin_table1 = -1.*norm**2.*(all_theory[10]/h**2./k_grid**2)*h**3
                                 Pk_lin_table2 = norm**2.*(all_theory[14])*h**3.
                                 P0int = interpolate.InterpolatedUnivariateSpline(k_grid,Pk_lin_table1,ext=3)
-                                Tfunc = lambda k: (P0int(k)/(As*2.*np.pi**2.*((k*h/0.05)**(cosmo.n_s()-1.))/k**3.))**0.5
+                                Tfunc = lambda k: (P0int(k)/(As*2.*np.pi**2.*((k*h/0.05)**(ns-1.))/k**3.))**0.5
                         
                         
                         ## Compute Pk
                         if self.use_P:
 
                                 # Define PkTheory class, used to compute power spectra and derivatives
-                                pk_theory = PkTheory(self, all_theory, h, As, fNL_eq, fNL_orth, norm, f[0, idx_growth], k_grid, dataset.kPQ, nP, nQ, Tfunc(k_grid))
+                                pk_theory = PkTheory(self, all_theory, h, As, fNL_eq, fNL_orth, norm, f[0, idx_growth],
+                                                     k_grid, dataset.kPQ, nP, nQ, Tfunc(k_grid))
                                 
                                 # Compute theory model for Pl and add to (theory - data)
-                                P0, P2, P4 = pk_theory.compute_Pl_oneloop(b1[zi], b2[zi], bG2[zi], mean_bGamma3[zi], mean_cs0[zi], mean_cs2[zi], mean_cs4[zi], mean_b4[zi], mean_a0[zi], mean_a2[zi], self.inv_nbar[zi], mean_Pshot[zi], mean_bphi[zi])
+                                P0, P2, P4 = pk_theory.compute_Pl_oneloop(b1[zi], b2[zi], bG2[zi], mean_bGamma3[zi],
+                                                                          mean_cs0[zi], mean_cs2[zi], mean_cs4[zi],
+                                                                          mean_b4[zi], mean_a0[zi], mean_a2[zi],
+                                                                          self.inv_nbar[zi], mean_Pshot[zi],
+                                                                          mean_bphi[zi])
                                 theory_minus_data[0*nP:1*nP] = P0 - dataset.P0[zi]
                                 theory_minus_data[1*nP:2*nP] = P2 - dataset.P2[zi]
                                 theory_minus_data[2*nP:3*nP] = P4 - dataset.P4[zi]
@@ -184,7 +213,10 @@ class full_shape_spectra(): #Likelihood_prior):
                         if self.use_Q:
                                 
                                 # Compute theoretical Q0 model and add to (theory - data)
-                                Q0 = pk_theory.compute_Q0_oneloop(b1[zi], b2[zi], bG2[zi], mean_bGamma3[zi], mean_cs0[zi], mean_cs2[zi], mean_cs4[zi], mean_b4[zi], mean_a0[zi], mean_a2[zi], self.inv_nbar[zi], mean_Pshot[zi], mean_bphi[zi])
+                                Q0 = pk_theory.compute_Q0_oneloop(b1[zi], b2[zi], bG2[zi], mean_bGamma3[zi],
+                                                                  mean_cs0[zi], mean_cs2[zi], mean_cs4[zi], mean_b4[zi],
+                                                                  mean_a0[zi], mean_a2[zi], self.inv_nbar[zi],
+                                                                  mean_Pshot[zi], mean_bphi[zi])
                                 theory_minus_data[3*nP:3*nP+nQ] = Q0 - dataset.Q0[zi]
 
                                 # Compute derivatives of Q0 with respect to parameters
@@ -205,8 +237,8 @@ class full_shape_spectra(): #Likelihood_prior):
                         if self.use_AP:  
 
                                 # Compute theoretical AP model and add to (theory - data)
-                                A_par = self.rdHfid[zi]/(rs_th*Hz_th[zi])
-                                A_perp = self.rdDAfid[zi]/(rs_th/DA_th[zi])
+                                A_par = self.rdHfid[zi]/(rs_drag*h_z[idx_distance])
+                                A_perp = self.rdDAfid[zi]/(rs_drag/d_a[idx_distance])
                                 theory_minus_data[-2] = A_par - dataset.alphas[zi][0]
                                 theory_minus_data[-1] = A_perp - dataset.alphas[zi][1]
 
@@ -214,15 +246,19 @@ class full_shape_spectra(): #Likelihood_prior):
                         if self.use_B:
 
                                 # Define coordinate rescaling parameters and BAO parameters
-                                apar=self.Hz_fid[zi]/(Hz_th[zi]*(self.h_fid/h)/3.33564095198145e-6) # including kmsMpc conversion factor
-                                aperp=DA_th[zi]/self.DA_fid[zi]/(self.h_fid/h)
-                                r_bao = rs_th*h
+                                apar=self.Hz_fid[zi]/(h_z[idx_distance]*(self.h_fid/h)/3.33564095198145e-6)
+                                # including kmsMpc conversion factor
+                                aperp=d_a[idx_distance]/self.DA_fid[zi]/(self.h_fid/h)
+                                r_bao = rs_drag*h
 
                                 # Load the theory model class
-                                bk_theory = BkTheory(self, As, fNL_eq, fNL_orth, apar, aperp, f[0, idx_growth], r_bao, k_grid, Tfunc, Pk_lin_table1, Pk_lin_table2, self.inv_nbar[zi], self.gauss_w, self.gauss_w2, self.mesh_mu, nB)
+                                bk_theory = BkTheory(self, As, fNL_eq, fNL_orth, apar, aperp, f[0, idx_growth], r_bao,
+                                                     k_grid, Tfunc, Pk_lin_table1, Pk_lin_table2, self.inv_nbar[zi],
+                                                     self.gauss_w, self.gauss_w2, self.mesh_mu, nB)
 
                                 # Compute the tree-level bispectrum and parameter derivatives
-                                B0, deriv_PshotB, deriv_BshotB, deriv_c1B = bk_theory.compute_B0_tree_theory_derivs(b1[zi], b2[zi], bG2[zi], mean_c1[zi], mean_Pshot[zi], mean_Bshot[zi])
+                                B0, deriv_PshotB, deriv_BshotB, deriv_c1B = bk_theory.compute_B0_tree_theory_derivs(
+                                        b1[zi], b2[zi], bG2[zi], mean_c1[zi], mean_Pshot[zi], mean_Bshot[zi])
 
                                 # Add B0 to (theory - data), including discreteness weights
                                 theory_minus_data[3*nP+nQ:3*nP+nQ+nB] = B0*dataset.discreteness_weights[zi] - dataset.B0[zi]

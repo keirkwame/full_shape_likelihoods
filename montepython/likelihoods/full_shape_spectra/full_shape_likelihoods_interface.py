@@ -23,8 +23,10 @@ def execute(block, config):
     #Get cosmological parameters
     h = block['cosmological_parameters', 'h0']
     A_s = block['cosmological_parameters', 'a_s']
+    n_s = block['cosmological_parameters', 'n_s']
 
     #Get cosmological distances
+    rs_drag = block['distances', 'rs_zdrag']
     z_distance = block['distances', 'z']
     h_z = block['distances', 'h']
     d_a = block['distances', 'd_a'] #Mpc
@@ -38,7 +40,7 @@ def execute(block, config):
     print('Matter power:', k_power.shape, z_power.shape, pk.shape)
 
     #Get cosmology
-    cosmology = [(h, A_s), (z_distance, h_z, d_a), (k_growth, z_growth, f, delta_tot), (k_power, z_power, pk)]
+    cosmology = [(h, A_s, n_s), (rs_drag, z_distance, h_z, d_a), (k_growth, z_growth, f, delta_tot), (k_power, z_power, pk)]
 
     #Get nuisance parameters
     nuisance_parameters = [None,] * 6
