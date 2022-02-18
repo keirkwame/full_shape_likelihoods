@@ -79,15 +79,19 @@ class full_shape_spectra(): #Likelihood_prior):
                 """Compute the log-likelihood for a given set of cosmological and nuisance parameters. Note that this marginalizes over nuisance parameters that enter the model linearly."""
 
                 # Load cosmological parameters
-                h = cosmo.h()
-                As = cosmo.A_s()
+                h, As = cosmo[0]
+                z_distance, h_z, d_a = cosmo[1]
+                k_growth, z_growth, f, delta_tot = cosmo[2]
+                k_power, z_power, pk = cosmo[3]
+                #h = cosmo.h()
+                #As = cosmo.A_s()
                 norm = 1. # (A_s/A_s_fid)^{1/2}
                 #fNL_eq = (data.mcmc_parameters['f^{eq}_{NL}']['current'] * data.mcmc_parameters['f^{eq}_{NL}']['scale'])
                 #fNL_orth = (data.mcmc_parameters['f^{orth}_{NL}']['current'] * data.mcmc_parameters['f^{orth}_{NL}']['scale'])
                 #alpha_rs = (data.mcmc_parameters['alpha_{r_s}']['current'] * data.mcmc_parameters['alpha_{r_s}']['scale'])
 
                 z = self.z[:self.nz]
-                fz = np.asarray([cosmo.scale_independent_growth_factor_f(zz) for zz in z])
+                #fz = np.asarray([cosmo.scale_independent_growth_factor_f(zz) for zz in z])
                 
                 # Load non-linear nuisance parameters
                 b1, b2, bG2, fNL_eq, fNL_orth, alpha_rs = nuisance_params
@@ -136,6 +140,9 @@ class full_shape_spectra(): #Likelihood_prior):
 
                 # Iterate over redshift bins
                 for zi in range(self.nz):
+                        #Get scale-independent f(z)
+                        idx_distance = np.where(np.absolute(z_distance - z[zi]) < 1.e-4)[0][0]
+                        idx_growth = np.where(np.absolute(z_growth - z[zi]) < 1.e-4)[0][0]
 
                         if self.use_P or self.use_B:
                                 # Run CLASS-PT
@@ -151,7 +158,7 @@ class full_shape_spectra(): #Likelihood_prior):
                         if self.use_P:
 
                                 # Define PkTheory class, used to compute power spectra and derivatives
-                                pk_theory = PkTheory(self, all_theory, h, As, fNL_eq, fNL_orth, norm, fz[zi], k_grid, dataset.kPQ, nP, nQ, Tfunc(k_grid))
+                                pk_theory = PkTheory(self, all_theory, h, As, fNL_eq, fNL_orth, norm, f[0, idx_growth], k_grid, dataset.kPQ, nP, nQ, Tfunc(k_grid))
                                 
                                 # Compute theory model for Pl and add to (theory - data)
                                 P0, P2, P4 = pk_theory.compute_Pl_oneloop(b1[zi], b2[zi], bG2[zi], mean_bGamma3[zi], mean_cs0[zi], mean_cs2[zi], mean_cs4[zi], mean_b4[zi], mean_a0[zi], mean_a2[zi], self.inv_nbar[zi], mean_Pshot[zi], mean_bphi[zi])
@@ -212,7 +219,7 @@ class full_shape_spectra(): #Likelihood_prior):
                                 r_bao = rs_th*h
 
                                 # Load the theory model class
-                                bk_theory = BkTheory(self, As, fNL_eq, fNL_orth, apar, aperp, fz[zi], r_bao, k_grid, Tfunc, Pk_lin_table1, Pk_lin_table2, self.inv_nbar[zi], self.gauss_w, self.gauss_w2, self.mesh_mu, nB)
+                                bk_theory = BkTheory(self, As, fNL_eq, fNL_orth, apar, aperp, f[0, idx_growth], r_bao, k_grid, Tfunc, Pk_lin_table1, Pk_lin_table2, self.inv_nbar[zi], self.gauss_w, self.gauss_w2, self.mesh_mu, nB)
 
                                 # Compute the tree-level bispectrum and parameter derivatives
                                 B0, deriv_PshotB, deriv_BshotB, deriv_c1B = bk_theory.compute_B0_tree_theory_derivs(b1[zi], b2[zi], bG2[zi], mean_c1[zi], mean_Pshot[zi], mean_Bshot[zi])

@@ -20,6 +20,26 @@ def execute(block, config):
     """Execute theory/likelihood calculation (galaxy clustering with BOSS data) for input linear cosmology."""
     likelihood_object = config
 
+    #Get cosmological parameters
+    h = block['cosmological_parameters', 'h0']
+    A_s = block['cosmological_parameters', 'a_s']
+
+    #Get cosmological distances
+    z_distance = block['distances', 'z']
+    h_z = block['distances', 'h']
+    d_a = block['distances', 'd_a'] #Mpc
+
+    #Get logarithmic growth rate
+    k_growth, z_growth, f = block.get_grid('linear_cdm_transfer', 'k_h', 'z', 'growth_factor_f') #h/Mpc
+    delta_tot = block.get('linear_cdm_transfer', 'delta_total')
+
+    #Get linear matter power spectrum
+    k_power, z_power, pk = block.get_grid('matter_power_lin', 'k_h', 'z', 'p_k') #Check order #h/Mpc, (Mpc/h)^3
+    print('Matter power:', k_power.shape, z_power.shape, pk.shape)
+
+    #Get cosmology
+    cosmology = [(h, A_s), (z_distance, h_z, d_a), (k_growth, z_growth, f, delta_tot), (k_power, z_power, pk)]
+
     #Get nuisance parameters
     nuisance_parameters = [None,] * 6
     nuisance_parameters[0] = np.array([None,] * likelihood_object.nz)
@@ -35,7 +55,7 @@ def execute(block, config):
         nuisance_parameters[2][i] = block['full_shape_likelihoods', 'bG2_z%i' % (i + 1)]
 
     #Get log-likelihood
-    log_like = likelihood_object.loglkl(cosmo, nuisance_parameters)
+    log_like = likelihood_object.loglkl(cosmology, nuisance_parameters)
     print('log_like =', log_like)
     block[names.likelihoods, 'full_shape_likelihoods_like'] = log_like
 
