@@ -142,6 +142,14 @@ class full_shape_spectra(): #Likelihood_prior):
                 # Initialize output chi2
                 chi2 = 0.
 
+                #Save theory output
+                P0_theory = np.zeros((nP, self.nz))
+                P2_theory = np.zeros((nP, self.nz))
+                P4_theory = np.zeros((nP, self.nz))
+                Q_theory = np.zeros((nQ, self.nz))
+                B_theory = np.zeros((nB, self.nz))
+                AP_theory = np.zeros((nAP, self.nz))
+
                 # Iterate over redshift bins
                 for zi in range(self.nz):
                         if (zi > 0) and (z[zi] != z[zi - 1]):
@@ -194,6 +202,10 @@ class full_shape_spectra(): #Likelihood_prior):
                                 theory_minus_data[0*nP:1*nP] = P0 - dataset.P0[zi]
                                 theory_minus_data[1*nP:2*nP] = P2 - dataset.P2[zi]
                                 theory_minus_data[2*nP:3*nP] = P4 - dataset.P4[zi]
+                                #Save theory output
+                                P0_theory[:, zi] = P0
+                                P2_theory[:, zi] = P2
+                                P4_theory[:, zi] = P4
 
                                 # Compute derivatives of Pl with respect to parameters
                                 deriv_bGamma3P, deriv_cs0P, deriv_cs2P, deriv_cs4P, deriv_b4P, deriv_PshotP, deriv_a0P, deriv_a2P, deriv_bphiP = pk_theory.compute_Pl_derivatives(b1[zi])
@@ -218,6 +230,8 @@ class full_shape_spectra(): #Likelihood_prior):
                                                                   mean_a0[zi], mean_a2[zi], self.inv_nbar[zi],
                                                                   mean_Pshot[zi], mean_bphi[zi])
                                 theory_minus_data[3*nP:3*nP+nQ] = Q0 - dataset.Q0[zi]
+                                # Save theory output
+                                Q_theory[:, zi] = Q0
 
                                 # Compute derivatives of Q0 with respect to parameters
                                 deriv_bGamma3Q, deriv_cs0Q, deriv_cs2Q, deriv_cs4Q, deriv_b4Q, deriv_PshotQ, deriv_a0Q, deriv_a2Q, deriv_bphiQ = pk_theory.compute_Q0_derivatives(b1[zi])
@@ -241,6 +255,9 @@ class full_shape_spectra(): #Likelihood_prior):
                                 A_perp = self.rdDAfid[zi]/(rs_drag/d_a[idx_distance])
                                 theory_minus_data[-2] = A_par - dataset.alphas[zi][0]
                                 theory_minus_data[-1] = A_perp - dataset.alphas[zi][1]
+                                # Save theory output
+                                AP_theory[0, zi] = A_par
+                                AP_theory[1, zi] = A_perp
 
                         #### Compute bispectrum
                         if self.use_B:
@@ -262,6 +279,8 @@ class full_shape_spectra(): #Likelihood_prior):
 
                                 # Add B0 to (theory - data), including discreteness weights
                                 theory_minus_data[3*nP+nQ:3*nP+nQ+nB] = B0*dataset.discreteness_weights[zi] - dataset.B0[zi]
+                                # Save theory output
+                                B_theory[:, zi] = B0
 
                                 # Add derivatives to joint derivative vector
                                 deriv_Pshot[3*nP+nQ:3*nP+nQ+nB] = deriv_PshotB
@@ -283,4 +302,5 @@ class full_shape_spectra(): #Likelihood_prior):
                 # Return full loglikelihood
                 loglkl = -0.5*chi2
 
-                return loglkl
+                assert len(dataset.kPQ) == nP + nQ
+                return loglkl, dataset.kPQ[:nP], P0_theory, P2_theory, P4_theory, dataset.kPQ[nP:(nP+nQ)], Q_theory, dataset.kB, B_theory, AP_theory

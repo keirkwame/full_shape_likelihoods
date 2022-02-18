@@ -40,7 +40,8 @@ def execute(block, config):
     print('Matter power:', k_power.shape, z_power.shape, pk.shape)
 
     #Get cosmology
-    cosmology = [(h, A_s, n_s), (rs_drag, z_distance, h_z, d_a), (k_growth, z_growth, f, delta_tot), (k_power, z_power, pk)]
+    cosmology = [(h, A_s, n_s), (rs_drag, z_distance, h_z, d_a), (k_growth, z_growth, f, delta_tot),
+                 (k_power, z_power, pk)]
 
     #Get nuisance parameters
     nuisance_parameters = [None,] * 6
@@ -57,8 +58,16 @@ def execute(block, config):
         nuisance_parameters[2][i] = block['full_shape_likelihoods', 'bG2_z%i' % (i + 1)]
 
     #Get log-likelihood
-    log_like = likelihood_object.loglkl(cosmology, nuisance_parameters)
+    log_like, kP, P0_theory, P2_theory, P4_theory, kQ, Q_theory, kB, B_theory, AP_theory = likelihood_object.loglkl(
+        cosmology, nuisance_parameters)
     print('log_like =', log_like)
+    block.put_grid('full_shape_likelihoods', 'k_multipoles', kP, 'z_multipoles',
+                   likelihood_object.z[likelihood_object.nz], 'monopole', P0_theory)
+    block.put('full_shape_likelihoods', 'quadrupole', P2_theory)
+    block.put('full_shape_likelihoods', 'hexadecapole', P4_theory)
+    block.put_grid('full_shape_likelihoods', 'k_Q', kQ, 'z_Q', likelihood_object.z[likelihood_object.nz], 'Q', Q_theory)
+    block.put_grid('full_shape_likelihoods', 'k_B', kB, 'z_B', likelihood_object.z[likelihood_object.nz], 'B', B_theory)
+    block.put('full_shape_likelihoods', 'Alcock_Paczynski', AP_theory)
     block[names.likelihoods, 'full_shape_likelihoods_like'] = log_like
 
     return 0
