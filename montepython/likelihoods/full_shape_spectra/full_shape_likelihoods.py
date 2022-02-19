@@ -134,7 +134,7 @@ class full_shape_spectra(): #Likelihood_prior):
                 
                 if self.use_P or self.use_B:
                         if self.bin_integration_P:
-                                k_grid = np.linspace(np.log(1.e-4),np.log(max(dataset.kPQ)+0.01),100)
+                                k_grid = np.linspace(np.log(1.e-4),np.log(max(dataset.kPQ)+0.01),1000)
                                 k_grid = np.exp(k_grid)
                         else:
                                 k_grid = dataset.kPQ
@@ -152,22 +152,23 @@ class full_shape_spectra(): #Likelihood_prior):
 
                 # Iterate over redshift bins
                 for zi in range(self.nz):
-                        if (zi > 0) and (z[zi] != z[zi - 1]):
+                        if (zi == 0) or (z[zi] != z[zi - 1]):
                                 #Get z indices
                                 idx_distance = np.where(np.absolute(z_distance - z[zi]) < 1.e-4)[0][0]
                                 idx_growth = np.where(np.absolute(z_growth - z[zi]) < 1.e-4)[0][0]
-                                idx_power = np.where(np.absolute(z_power - z) < 1.e-4)[0][0]
+                                idx_power = np.where(np.absolute(z_power - z[zi]) < 1.e-4)[0][0]
 
                                 #Get linear matter power spectrum
-                                pk_linear = 'pk_linear.dat'
+                                pk_linear = 'pk_linear_%i.dat'%zi
                                 k_pk = np.concatenate((k_power.reshape(-1, 1) * h, pk[:, idx_power].reshape(-1, 1) / (h ** 3)),
                                                       axis=1)
                                 np.savetxt(pk_linear, k_pk, delimiter='\t')
 
                                 #Get CLASS-PT object
+                                print(zi, h, z[zi], pk_linear, h_z[idx_distance], d_a[idx_distance], delta_tot[0, idx_growth] / delta_tot[0, idx_growth_0], f[0, idx_growth])
                                 class_object = Class()
                                 class_object.set({'h': h, 'output': 'mPk', 'z_pk': z[zi], 'non linear': 'PT',
-                                                  'IR resummation': 'Yes', 'Bias tracers': 'Yes', 'FFTLog mode': 'FAST',
+                                                  'IR resummation': 'Yes', 'Bias tracers': 'Yes', 'FFTLog mode': 'Normal', #'FAST',
                                                   'RSD': 'Yes', 'AP': 'Yes', 'Omfid': '0.31', 'Input Pk': pk_linear,
                                                   'replace background': 'Yes', 'Hz_replace': h_z[idx_distance],
                                                   'DAz_replace': d_a[idx_distance],
@@ -191,7 +192,7 @@ class full_shape_spectra(): #Likelihood_prior):
 
                                 # Define PkTheory class, used to compute power spectra and derivatives
                                 pk_theory = PkTheory(self, all_theory, h, As, fNL_eq, fNL_orth, norm, f[0, idx_growth],
-                                                     k_grid, dataset.kPQ, nP, nQ, Tfunc(k_grid))
+                                                     k_grid, dataset.kPQ, nP, nQ, Tfunc(k_grid), zi)
                                 
                                 # Compute theory model for Pl and add to (theory - data)
                                 P0, P2, P4 = pk_theory.compute_Pl_oneloop(b1[zi], b2[zi], bG2[zi], mean_bGamma3[zi],

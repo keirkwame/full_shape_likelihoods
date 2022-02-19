@@ -71,8 +71,9 @@ def execute(block, config):
     block.put('full_shape_likelihoods', 'hexadecapole', P4_theory)
     block.put_grid('full_shape_likelihoods', 'k_Q', kQ, 'z_Q', likelihood_object.z[:likelihood_object.nz], 'Q',
                    Q_theory)
-    block.put_grid('full_shape_likelihoods', 'k_B', kB, 'z_B', likelihood_object.z[:likelihood_object.nz], 'B',
+    block.put_grid('full_shape_likelihoods', 'index_B', np.arange(B_theory.shape[0]), 'z_B', likelihood_object.z[:likelihood_object.nz], 'B',
                    B_theory)
+    block.put('full_shape_likelihoods', 'k_B', kB)
     block.put('full_shape_likelihoods', 'Alcock_Paczynski', AP_theory)
     block[names.likelihoods, 'full_shape_likelihoods_like'] = log_like
 
