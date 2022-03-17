@@ -4,7 +4,7 @@ import numpy as np
 import os
 from scipy import interpolate
 import scipy.integrate as integrate
-import classy
+#import classy
 
 class Datasets(object):
         def __init__(self, options):
@@ -172,7 +172,7 @@ class PkTheory(object):
                         f_int = interpolate.InterpolatedUnivariateSpline(self.k_grid,input_table1,ext=3)
                         integrand = lambda k: np.exp(3.*k)*f_int(np.exp(k))
                         out = np.zeros(len(self.kPQ))
-                        print('Integrating')
+                        #print('Integrating')
                         for i in range(len(self.kPQ)):
                                 kmin = self.dataset.dkPQ*i+self.options.kminP
                                 kmax = self.dataset.dkPQ*(i+1)+self.options.kminP
@@ -228,16 +228,16 @@ class PkTheory(object):
                 # Compute the power spectrum multipoles, including bin integration if requested
                 if fNL_eq==0 and fNL_orth==0:
                         integrator_input = (norm**2.*all_theory[15]+norm**4.*(all_theory[21])+norm**1.*b1*all_theory[16]+norm**3.*b1*(all_theory[22]) + norm**0.*b1**2.*all_theory[17] +norm**2.*b1**2.*all_theory[23] + 0.25*norm**2.*b2**2.*all_theory[1] +b1*b2*norm**2.*all_theory[30]+ b2*norm**3.*all_theory[31] + b1*bG2*norm**2.*all_theory[32]+ bG2*norm**3.*all_theory[33] + b2*bG2*norm**2.*all_theory[4]+ bG2**2.*norm**2.*all_theory[5] + 2.*cs0*norm**2.*all_theory[11]/h**2. + (2.*bG2+0.8*bGamma3*norm)*norm**2.*(b1*all_theory[7]+norm*all_theory[8]))*h**3. + (inv_nbar)*Pshot + a0*inv_nbar*(k_grid/0.5)**2.  + fz**2.*b4*k_grid**2.*(norm**2.*fz**2./9. + 2.*fz*b1*norm/7. + b1**2./5)*(35./8.)*all_theory[13]*h + a2*(1./3.)*(10.**4.)*(k_grid/0.45)**2.
-                        np.savez('integrator_%.10f_%i.npz'%(self.fz, self.index), self.k_grid, integrator_input, norm, all_theory, b1, b2, bG2, cs0, h, bGamma3, inv_nbar, Pshot, a0, fz, b4, a2)
+                        #np.savez('integrator_%.10f_%i.npz'%(self.fz, self.index), self.k_grid, integrator_input, norm, all_theory, b1, b2, bG2, cs0, h, bGamma3, inv_nbar, Pshot, a0, fz, b4, a2)
                         self.P0 = self.bin_integrator((norm**2.*all_theory[15]+norm**4.*(all_theory[21])+norm**1.*b1*all_theory[16]+norm**3.*b1*(all_theory[22]) + norm**0.*b1**2.*all_theory[17] +norm**2.*b1**2.*all_theory[23] + 0.25*norm**2.*b2**2.*all_theory[1] +b1*b2*norm**2.*all_theory[30]+ b2*norm**3.*all_theory[31] + b1*bG2*norm**2.*all_theory[32]+ bG2*norm**3.*all_theory[33] + b2*bG2*norm**2.*all_theory[4]+ bG2**2.*norm**2.*all_theory[5] + 2.*cs0*norm**2.*all_theory[11]/h**2. + (2.*bG2+0.8*bGamma3*norm)*norm**2.*(b1*all_theory[7]+norm*all_theory[8]))*h**3. + (inv_nbar)*Pshot + a0*inv_nbar*(k_grid/0.5)**2.  + fz**2.*b4*k_grid**2.*(norm**2.*fz**2./9. + 2.*fz*b1*norm/7. + b1**2./5)*(35./8.)*all_theory[13]*h + a2*(1./3.)*(10.**4.)*(k_grid/0.45)**2.)
                         self.P2 = self.bin_integrator((norm**2.*all_theory[18]+norm**4.*(all_theory[24])+norm**1.*b1*all_theory[19]+norm**3.*b1*(all_theory[25]) + b1**2.*norm**2.*all_theory[26] +b1*b2*norm**2.*all_theory[34]+ b2*norm**3.*all_theory[35] + b1*bG2*norm**2.*all_theory[36]+ bG2*norm**3.*all_theory[37] + 0.25*b2**2.*all_theory[42] + b2*bG2*all_theory[43] + (bG2**2.)*all_theory[44] + 2.*cs2*norm**2.*all_theory[12]/h**2. + (2.*bG2+0.8*bGamma3*norm)*norm**3.*all_theory[9])*h**3. + fz**2.*b4*k_grid**2.*((norm**2.*fz**2.*70. + 165.*fz*b1*norm+99.*b1**2.)*4./693.)*(35./8.)*all_theory[13]*h + a2*(10.**4.)*(2./3.)*(k_grid/0.45)**2.)
                         self.P4 = self.bin_integrator((norm**2.*all_theory[20]+norm**4.*all_theory[27]+b1*norm**3.*all_theory[28]+b1**2.*norm**2.*all_theory[29] + b2*norm**3.*all_theory[38] + bG2*norm**3.*all_theory[39] + b1*b2*all_theory[40] + b1*bG2*all_theory[41] + 0.25*b2**2.*all_theory[45] + b2*bG2*all_theory[46] + (bG2**2.)*all_theory[46] +2.*cs4*norm**2.*all_theory[13]/h**2.)*h**3. + fz**2.*b4*k_grid**2.*(norm**2.*fz**2.*210./143. + 30.*fz*b1*norm/11.+b1**2.)*all_theory[13]*h)
                 else:
-                        print('Integrating P0')
+                        #print('Integrating P0')
                         self.P0 = self.bin_integrator((norm**2.*all_theory[15]+norm**4.*(all_theory[21])+norm**1.*b1*all_theory[16]+norm**3.*b1*(all_theory[22]) + norm**0.*b1**2.*all_theory[17] +norm**2.*b1**2.*all_theory[23] + 0.25*norm**2.*b2**2.*all_theory[1] +b1*b2*norm**2.*all_theory[30]+ b2*norm**3.*all_theory[31] + b1*bG2*norm**2.*all_theory[32]+ bG2*norm**3.*all_theory[33] + b2*bG2*norm**2.*all_theory[4]+ bG2**2.*norm**2.*all_theory[5] + 2.*cs0*norm**2.*all_theory[11]/h**2. + (2.*bG2+0.8*bGamma3*norm)*norm**2.*(b1*all_theory[7]+norm*all_theory[8]))*h**3. + (inv_nbar)*Pshot + a0*inv_nbar*(k_grid/0.5)**2.  + fz**2.*b4*k_grid**2.*(norm**2.*fz**2./9. + 2.*fz*b1*norm/7. + b1**2./5)*(35./8.)*all_theory[13]*h + a2*(1./3.)*(10.**4.)*(k_grid/0.45)**2. + fNL_eq*(h**3.)*(all_theory[51]+b1*all_theory[52]+b1**2.*all_theory[53]+b1*b2*all_theory[60]+b2*all_theory[61]+b1*bG2*all_theory[62]+bG2*all_theory[63]) + 1.*(2.*b1*self.phif+self.phif**2.)*all_theory[17]*(h**3.) + 1.*self.phif*all_theory[16]*(h**3.) + fNL_orth*(h**3.)*(all_theory[75]+b1*all_theory[76]+b1**2.*all_theory[77]+b1*b2*all_theory[84]+b2*all_theory[85]+b1*bG2*all_theory[86]+bG2*all_theory[87]))
-                        print('Integrating P2')
+                        #print('Integrating P2')
                         self.P2 = self.bin_integrator((norm**2.*all_theory[18]+norm**4.*(all_theory[24])+norm**1.*b1*all_theory[19]+norm**3.*b1*(all_theory[25]) + b1**2.*norm**2.*all_theory[26] +b1*b2*norm**2.*all_theory[34]+ b2*norm**3.*all_theory[35] + b1*bG2*norm**2.*all_theory[36]+ bG2*norm**3.*all_theory[37] + 0.25*b2**2.*all_theory[42] + b2*bG2*all_theory[43] + (bG2**2.)*all_theory[44] + 2.*cs2*norm**2.*all_theory[12]/h**2. + (2.*bG2+0.8*bGamma3*norm)*norm**3.*all_theory[9])*h**3. + fz**2.*b4*k_grid**2.*((norm**2.*fz**2.*70. + 165.*fz*b1*norm+99.*b1**2.)*4./693.)*(35./8.)*all_theory[13]*h + a2*(10.**4.)*(2./3.)*(k_grid/0.45)**2.+ fNL_eq*(h**3.)*(all_theory[54]+b1*all_theory[55]+b1**2.*all_theory[56]+b1*b2*all_theory[64]+b2*all_theory[65]+b1*bG2*all_theory[66]+bG2*all_theory[67]) + 1.*self.phif*all_theory[19]*(h**3.) + fNL_orth*(h**3.)*(all_theory[78]+b1*all_theory[79]+b1**2.*all_theory[80]+b1*b2*all_theory[88]+b2*all_theory[89]+b1*bG2*all_theory[90]+bG2*all_theory[91]))
-                        print('Integrating P4')
+                        #print('Integrating P4')
                         self.P4 = self.bin_integrator((norm**2.*all_theory[20]+norm**4.*all_theory[27]+b1*norm**3.*all_theory[28]+b1**2.*norm**2.*all_theory[29] + b2*norm**3.*all_theory[38] + bG2*norm**3.*all_theory[39] + b1*b2*all_theory[40] + b1*bG2*all_theory[41] + 0.25*b2**2.*all_theory[45] + b2*bG2*all_theory[46] + (bG2**2.)*all_theory[46] +2.*cs4*norm**2.*all_theory[13]/h**2.)*h**3. + fz**2.*b4*k_grid**2.*(norm**2.*fz**2.*210./143. + 30.*fz*b1*norm/11.+b1**2.)*all_theory[13]*h+fNL_eq*(h**3.)*(all_theory[57]+b1*all_theory[58]+b1**2.*all_theory[59]+b1*b2*all_theory[68]+b2*all_theory[69]+b1*bG2*all_theory[70]+bG2*all_theory[71]) + fNL_orth*(h**3.)*(all_theory[81]+b1*all_theory[82]+b1**2.*all_theory[83]+b1*b2*all_theory[92]+b2*all_theory[93]+b1*bG2*all_theory[94]+bG2*all_theory[95]))
                 
         def _load_individual_derivatives(self, b1):
@@ -251,17 +251,17 @@ class PkTheory(object):
                 k_grid = self.k_grid
                 
                 # Compute derivatives, including bin integration if requested
-                print('Integrating deriv0_bG3')
+                #print('Integrating deriv0_bG3')
                 self.deriv0_bGamma3 = self.bin_integrator((0.8*norm)*norm**2.*(b1*all_theory[7]+norm*all_theory[8])*h**3.)
-                print('Integrating deriv2_bG3')
+                #print('Integrating deriv2_bG3')
                 self.deriv2_bGamma3 = self.bin_integrator((0.8*norm)*norm**3.*all_theory[9]*h**3.)
-                print('Integrating deriv0_cs0')
+                #print('Integrating deriv0_cs0')
                 self.deriv0_cs0 = self.bin_integrator(2.*norm**2.*all_theory[11]*h**1.)
-                print('Integrating deriv2_cs2')
+                #print('Integrating deriv2_cs2')
                 self.deriv2_cs2 = self.bin_integrator(2.*norm**2.*all_theory[12]*h**1.)
-                print('Integrating deriv4_cs4')
+                #print('Integrating deriv4_cs4')
                 self.deriv4_cs4 = self.bin_integrator(2.*norm**2.*all_theory[13]*h**1.)
-                print('Integrating derivN_b4')
+                #print('Integrating derivN_b4')
                 self.derivN_b4 = self.bin_integrator(fz**2.*k_grid**2.*all_theory[13]*h)
 
                 # Derivatives involving fNL
@@ -269,9 +269,9 @@ class PkTheory(object):
                         self.deriv0_bphi = np.zeros(len(self.kPQ))
                         self.deriv2_bphi = np.zeros(len(self.kPQ))
                 else:
-                        print('Integrating deriv0_bphi')
+                        #print('Integrating deriv0_bphi')
                         self.deriv0_bphi = self.bin_integrator((2.*b1*self.phif1+2.*self.phif1*self.phif)*all_theory[17]*(h**3.) + self.phif1*all_theory[16]*(h**3.))
-                        print('Integrating deriv2_bphi')
+                        #print('Integrating deriv2_bphi')
                         self.deriv2_bphi = self.bin_integrator(self.phif1*all_theory[19]*(h**3.))
                 
         def compute_Pl_derivatives(self, b1):

@@ -1,3 +1,5 @@
+import inspect
+import threading
 import numpy as np
 #from montepython.likelihood_class import Likelihood_prior
 from scipy import interpolate
@@ -5,7 +7,9 @@ from scipy.special.orthogonal import p_roots
 #import os,sys
 #path=os.path.dirname(os.path.realpath(__file__))
 #sys.path.append(path)
+import classy
 from classy import Class
+print(inspect.getfile(classy))
 from fs_utils import Datasets, PkTheory, BkTheory
 
 class full_shape_spectra(): #Likelihood_prior):
@@ -159,16 +163,23 @@ class full_shape_spectra(): #Likelihood_prior):
                                 idx_power = np.where(np.absolute(z_power - z[zi]) < 1.e-4)[0][0]
 
                                 #Get linear matter power spectrum
-                                pk_linear = 'pk_linear_%i.dat'%zi
+                                pk_linear = 'pk_linear_%i_%i_test2.dat'%(zi, threading.get_native_id())
                                 k_pk = np.concatenate((k_power.reshape(-1, 1) * h, pk[:, idx_power].reshape(-1, 1) / (h ** 3)),
                                                       axis=1)
-                                np.savetxt(pk_linear, k_pk, delimiter='\t')
+                                #print((k_pk[:, 1] < 1.e+1)) #* (k_pk[:, 0] < 0.6))
+                                #k_pk[(k_pk[:, 1] < 1.e+1), 1] = 1.e+1
+                                #np.savetxt(pk_linear, k_pk, delimiter='\t')
+                                with open(pk_linear, 'w+') as fi:
+                                    fmt = '\t'.join(['%.18e'] * k_pk.shape[1])
+                                    fmt = '\n'.join([fmt] * k_pk.shape[0])
+                                    data = fmt % tuple(k_pk.ravel())
+                                    fi.write(data)
 
                                 #Get CLASS-PT object
                                 print(zi, h, z[zi], pk_linear, h_z[idx_distance], d_a[idx_distance], delta_tot[0, idx_growth] / delta_tot[0, idx_growth_0], f[0, idx_growth])
                                 class_object = Class()
                                 class_object.set({'h': h, 'output': 'mPk', 'z_pk': z[zi], 'non linear': 'PT',
-                                                  'IR resummation': 'Yes', 'Bias tracers': 'Yes', 'FFTLog mode': 'Normal', #'FAST',
+                                                  'IR resummation': 'Yes', 'Bias tracers': 'Yes', 'FFTLog mode': 'FAST',
                                                   'RSD': 'Yes', 'AP': 'Yes', 'Omfid': '0.31', 'Input Pk': pk_linear,
                                                   'replace background': 'Yes', 'Hz_replace': h_z[idx_distance],
                                                   'DAz_replace': d_a[idx_distance],
@@ -180,6 +191,7 @@ class full_shape_spectra(): #Likelihood_prior):
                                 # Run CLASS-PT
                                 all_theory = class_object.get_pk_mult(k_grid*h, z[zi], len(k_grid),
                                                                       no_wiggle = self.no_wiggle, alpha_rs = alpha_rs)
+                                #np.save('all_theory_%i.npy'%zi, all_theory)
                                 # Load fNL utilities
                                 Pk_lin_table1 = -1.*norm**2.*(all_theory[10]/h**2./k_grid**2)*h**3
                                 Pk_lin_table2 = norm**2.*(all_theory[14])*h**3.
