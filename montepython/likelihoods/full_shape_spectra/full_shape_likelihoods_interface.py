@@ -4,6 +4,7 @@ import ctypes
 import gc
 import json
 import full_shape_likelihoods as fsl
+from memprof import memprof
 from cosmosis.datablock import names
 
 def setup(options):
@@ -22,6 +23,7 @@ def setup(options):
     likelihood_object = fsl.full_shape_spectra(options_dict)
     return likelihood_object
 
+@memprof(plot=True)
 def execute(block, config):
     """Execute theory/likelihood calculation (galaxy clustering with BOSS data) for input linear cosmology."""
     likelihood_object = config
