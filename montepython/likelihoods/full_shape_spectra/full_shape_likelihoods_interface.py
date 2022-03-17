@@ -1,5 +1,7 @@
 #!python3
 import numpy as np
+import ctypes
+import gc
 import json
 import full_shape_likelihoods as fsl
 from cosmosis.datablock import names
@@ -81,4 +83,10 @@ def execute(block, config):
 
 def cleanup(config):
     """Cleanup."""
-    pass
+    del(config)
+    gc.collect()
+
+    libc = ctypes.CDLL("/usr/lib/x86_64-linux-gnu/libc.so.6")
+    libc.malloc_trim(0)
+
+    return 0

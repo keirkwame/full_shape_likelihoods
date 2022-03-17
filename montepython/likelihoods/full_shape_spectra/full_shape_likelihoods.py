@@ -316,4 +316,16 @@ class full_shape_spectra(): #Likelihood_prior):
                 loglkl = -0.5*chi2
 
                 assert len(dataset.kPQ) == nP + nQ
+
+                #Delete memory
+                '''del cosmo
+                del rs_drag
+                del z_distance
+                del h_z
+                del d_a
+                del k_growth
+                del z_growth
+                del f
+                del delta_tot'''
+
                 return loglkl, dataset.kPQ[:nP], P0_theory, P2_theory, P4_theory, dataset.kPQ[nP:(nP+nQ)], Q_theory, dataset.kB, B_theory, AP_theory
