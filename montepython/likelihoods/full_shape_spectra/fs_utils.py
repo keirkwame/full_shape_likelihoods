@@ -424,8 +424,12 @@ class BkTheory(object):
                 deltaSigma2 = integrate.quad(lambda k: (4*np.pi)*np.exp(1.*k)*P0int(np.exp(k))*(self.j2(np.exp(k)*r_bao))/((2*np.pi)**3.), np.log(2.e-4), np.log(ks_IR), epsrel=1.e-3)[0]
 
                 # IR resummed spectra
-                self.P_IR = lambda k, mu: Pnwfunc(k) +  np.exp(-k**2.*(Sigma2*(1.+2.*fz*mu**2.*(2.+fz)) + deltaSigma2*mu**2.*fz**2.*(mu**2.-1.)))*Pwfunc(k) -(c1*mu**2.)*(k/0.3)**2.*P0int(k)/(b1+fz*mu**2.)
-                self.P_IRC = lambda k, mu:Pnwfunc(k) +  np.exp(-k**2.*(Sigma2*(1.+2.*fz*mu**2.*(2.+fz)) + deltaSigma2*mu**2.*fz**2.*(mu**2.-1.)))*Pwfunc(k) -(mu**2.)*(k/0.3)**2.*P0int(k)/(b1+fz*mu**2.)
+                #print('Using B0 fix 1')
+                self.P_IR = lambda k, mu: P0int(k) -(c1*mu**2.)*(k/0.3)**2.*P0int(k)/(b1+fz*mu**2.)
+                #print('Using B0 fix 2')
+                self.P_IRC = lambda k, mu:P0int(k) -(mu**2.)*(k/0.3)**2.*P0int(k)/(b1+fz*mu**2.)
+#                self.P_IR = lambda k, mu: Pnwfunc(k) +  np.exp(-k**2.*(Sigma2*(1.+2.*fz*mu**2.*(2.+fz)) + deltaSigma2*mu**2.*fz**2.*(mu**2.-1.)))*Pwfunc(k) -(c1*mu**2.)*(k/0.3)**2.*P0int(k)/(b1+fz*mu**2.)
+#                self.P_IRC = lambda k, mu:Pnwfunc(k) +  np.exp(-k**2.*(Sigma2*(1.+2.*fz*mu**2.*(2.+fz)) + deltaSigma2*mu**2.*fz**2.*(mu**2.-1.)))*Pwfunc(k) -(mu**2.)*(k/0.3)**2.*P0int(k)/(b1+fz*mu**2.)
                 
         def _compute_B_matrices(self,beta,b1,b2,bG2,Pshot,Bshot,kc1,kc2,kc3,dk1,dk2,dk3,k1,k2,k3,mu1,phi):
                 """Load the bispectrum matrices for a given set of k bins. These will later be integrated over bins to form the bispectrum monopole and derivatives"""

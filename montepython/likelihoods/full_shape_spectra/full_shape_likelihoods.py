@@ -1,3 +1,4 @@
+import gc
 import inspect
 import threading
 import numpy as np
@@ -163,7 +164,7 @@ class full_shape_spectra(): #Likelihood_prior):
                                 idx_power = np.where(np.absolute(z_power - z[zi]) < 1.e-4)[0][0]
 
                                 #Get linear matter power spectrum
-                                pk_linear = 'pk_linear_%i_%i_test2.dat'%(zi, threading.get_native_id())
+                                pk_linear = 'tmp_data/pk_linear_%i_%i_test2.dat'%(zi, threading.get_native_id())
                                 k_pk = np.concatenate((k_power.reshape(-1, 1) * h, pk[:, idx_power].reshape(-1, 1) / (h ** 3)),
                                                       axis=1)
                                 #print((k_pk[:, 1] < 1.e+1)) #* (k_pk[:, 0] < 0.6))
@@ -186,11 +187,15 @@ class full_shape_spectra(): #Likelihood_prior):
                                                   'Dz_replace': delta_tot[0, idx_growth] / delta_tot[0, idx_growth_0],
                                                   'fz_replace': f[0, idx_growth]})
                                 class_object.compute()
+                                if self.use_P or self.use_B:
+                                        all_theory = class_object.get_pk_mult(k_grid*h, z[zi], len(k_grid), no_wiggle = self.no_wiggle, alpha_rs = alpha_rs)
+                                class_object.struct_cleanup()
 
                         if self.use_P or self.use_B:
                                 # Run CLASS-PT
-                                all_theory = class_object.get_pk_mult(k_grid*h, z[zi], len(k_grid),
-                                                                      no_wiggle = self.no_wiggle, alpha_rs = alpha_rs)
+                                #all_theory = np.ones((96, 1000))
+                                #all_theory = class_object.get_pk_mult(k_grid*h, z[zi], len(k_grid),
+                                #                                      no_wiggle = self.no_wiggle, alpha_rs = alpha_rs)
                                 #np.save('all_theory_%i.npy'%zi, all_theory)
                                 # Load fNL utilities
                                 Pk_lin_table1 = -1.*norm**2.*(all_theory[10]/h**2./k_grid**2)*h**3
@@ -311,13 +316,19 @@ class full_shape_spectra(): #Likelihood_prior):
                         
                         # Bias parameter priors applied elsewhere
                         #chi2 += (b2[zi]-mean_b2[zi])**2./std_b2[zi]**2. + (bG2[zi]-mean_bG2[zi])**2./std_bG2[zi]**2.
-
+                        
+                #Free memory
+                #class_object.struct_cleanup()
+                
                 # Return full loglikelihood
                 loglkl = -0.5*chi2
 
                 assert len(dataset.kPQ) == nP + nQ
 
                 #Delete memory
+                #del(class_object)
+                del(all_theory)
+                gc.collect()
                 '''del cosmo
                 del rs_drag
                 del z_distance
@@ -328,4 +339,10 @@ class full_shape_spectra(): #Likelihood_prior):
                 del f
                 del delta_tot'''
 
+                #Handle no bispectrum
+                if not self.use_B:
+                    B_theory = np.ones((1, self.nz)) * np.nan
+                    dataset.kB = np.ones(1) * np.nan
+
+                #return (-600., np.linspace(0.0125, 0.1975, 20), np.zeros((20, 4)), np.zeros((20, 4)), np.zeros((20, 4)), np.linspace(0.2025, 0.3975, 20), np.zeros((20, 4)), np.linspace(0.015, 0.075, 7), np.zeros((80, 4)), np.zeros((2, 4)))
                 return loglkl, dataset.kPQ[:nP], P0_theory, P2_theory, P4_theory, dataset.kPQ[nP:(nP+nQ)], Q_theory, dataset.kB, B_theory, AP_theory

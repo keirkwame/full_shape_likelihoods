@@ -23,7 +23,7 @@ def setup(options):
     likelihood_object = fsl.full_shape_spectra(options_dict)
     return likelihood_object
 
-@memprof(plot=True)
+#@memprof(plot=True)
 def execute(block, config):
     """Execute theory/likelihood calculation (galaxy clustering with BOSS data) for input linear cosmology."""
     likelihood_object = config
@@ -66,8 +66,10 @@ def execute(block, config):
         nuisance_parameters[2][i] = block['full_shape_likelihoods', 'bG2_z%i' % (i + 1)]
 
     #Get log-likelihood
-    log_like, kP, P0_theory, P2_theory, P4_theory, kQ, Q_theory, kB, B_theory, AP_theory = likelihood_object.loglkl(
-        cosmology, nuisance_parameters)
+    log_like, kP, P0_theory, P2_theory, P4_theory, kQ, Q_theory, kB, B_theory, AP_theory = likelihood_object.loglkl(cosmology, nuisance_parameters)
+    #(-600., np.linspace(0.0125, 0.1975, 20), np.zeros((20, 4)), np.zeros((20, 4)), np.zeros((20, 4)), np.linspace(0.2025, 0.3975, 20), np.zeros((20, 4)), np.linspace(0.015, 0.075, 7), np.zeros((80, 4)), np.zeros((2, 4)))
+    #likelihood_object.loglkl(
+    #    cosmology, nuisance_parameters)
     print('log_like =', log_like)
     block.put_grid('full_shape_likelihoods', 'k_multipoles', kP, 'z_multipoles',
                    likelihood_object.z[:likelihood_object.nz], 'monopole', P0_theory)
@@ -75,11 +77,23 @@ def execute(block, config):
     block.put('full_shape_likelihoods', 'hexadecapole', P4_theory)
     block.put_grid('full_shape_likelihoods', 'k_Q', kQ, 'z_Q', likelihood_object.z[:likelihood_object.nz], 'Q',
                    Q_theory)
+    #print(B_theory, B_theory.shape, np.arange(B_theory.shape[0]))
     block.put_grid('full_shape_likelihoods', 'index_B', np.arange(B_theory.shape[0]), 'z_B', likelihood_object.z[:likelihood_object.nz], 'B',
                    B_theory)
     block.put('full_shape_likelihoods', 'k_B', kB)
     block.put('full_shape_likelihoods', 'Alcock_Paczynski', AP_theory)
+    if np.isnan(log_like):
+        log_like = -1.e+30
     block[names.likelihoods, 'full_shape_likelihoods_like'] = log_like
+
+    #Delete memory
+    del(config)
+    del(cosmology)
+    del(likelihood_object)
+    gc.collect()
+
+    #libc = ctypes.CDLL("/usr/lib/x86_64-linux-gnu/libc.so.6")
+    #libc.malloc_trim(0)
 
     return 0
 
@@ -88,7 +102,7 @@ def cleanup(config):
     del(config)
     gc.collect()
 
-    libc = ctypes.CDLL("/usr/lib/x86_64-linux-gnu/libc.so.6")
-    libc.malloc_trim(0)
+    #libc = ctypes.CDLL("/usr/lib/x86_64-linux-gnu/libc.so.6")
+    #libc.malloc_trim(0)
 
     return 0
