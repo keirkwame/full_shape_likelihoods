@@ -4,7 +4,7 @@ import ctypes
 import gc
 import json
 import full_shape_likelihoods as fsl
-from memprof import memprof
+#from memprof import memprof
 from cosmosis.datablock import names
 
 def setup(options):
